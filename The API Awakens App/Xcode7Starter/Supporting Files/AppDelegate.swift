@@ -15,15 +15,17 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
 
   func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
-    
+
     window = UIWindow(frame: UIScreen.main.bounds)
     window?.makeKeyAndVisible()
     
-    let home = HomeController()
-    let navigationController = UINavigationController(rootViewController: home)
+    let mainMenuController = MainMenuController()
+    let navigationController = UINavigationController(rootViewController: mainMenuController)
+    navigationController.navigationBar.barTintColor = UIColor.Theme.dark
+    
     
     window?.rootViewController = navigationController
-
+    
     return true
   }
 
