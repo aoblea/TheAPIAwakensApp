@@ -45,8 +45,6 @@ class InformationCell: UITableViewCell {
   var inputText: String?
   var convertedInputText: String?
   
-  var usd = "USD"
-  var credits = "Galactic Credits"
   var buttonPressed: Bool = false
   
   override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
@@ -109,11 +107,9 @@ class InformationCell: UITableViewCell {
     rowLabel.text = feature.name
     
     if feature.name == "Cost" && feature.description != "unknown" {
-      inputLabel.text = feature.description + " " + credits
+      inputLabel.text = feature.description + " Galactic Credits"
     } else {
       inputLabel.text = feature.description
-      self.convertButton.isHidden = true
-      self.rateTextField.isHidden = true
     }
     
     self.convertButton.isHidden = true
@@ -150,12 +146,13 @@ class InformationCell: UITableViewCell {
       } catch {
         print("error happened")
       }
-      
-      inputLabel.text = convertedInputText
+      guard let converted = convertedInputText else { return }
+      inputLabel.text = "\(converted) USD"
       
       buttonPressed = true
     } else if buttonPressed == true {
-      inputLabel.text = inputText
+      guard let input = inputText else { return }
+      inputLabel.text = "\(input) Galactic Credits"
       
       buttonPressed = false
     }
@@ -166,11 +163,11 @@ class InformationCell: UITableViewCell {
     // assign result to convertedInputText
     
     if let rate = rateTextField.text, let credits = inputText {
-      guard let numberRate = Double(rate) else {
+      guard let numberRate = Int(rate) else {
         print("Not a number")
         return
       }
-      guard let numberCredits = Double(credits) else {
+      guard let numberCredits = Int(credits) else {
         return
       }
 
