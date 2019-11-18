@@ -45,6 +45,8 @@ class InformationCell: UITableViewCell {
   var inputText: String?
   var convertedInputText: String?
   
+  var usd = "USD"
+  var credits = "Galactic Credits"
   var buttonPressed: Bool = false
   
   override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
@@ -105,7 +107,14 @@ class InformationCell: UITableViewCell {
     self.convertedInputText = feature.convertedDescription
     
     rowLabel.text = feature.name
-    inputLabel.text = feature.description
+    
+    if feature.name == "Cost" && feature.description != "unknown" {
+      inputLabel.text = feature.description + " " + credits
+    } else {
+      inputLabel.text = feature.description
+      self.convertButton.isHidden = true
+      self.rateTextField.isHidden = true
+    }
     
     self.convertButton.isHidden = true
     self.rateTextField.isHidden = true
@@ -136,7 +145,12 @@ class InformationCell: UITableViewCell {
     print("button pressed")
     if buttonPressed == false {
       // set inputlabel.text to conversion rate
-      convertCurrency()
+      do {
+        try convertCurrency()
+      } catch {
+        print("error happened")
+      }
+      
       inputLabel.text = convertedInputText
       
       buttonPressed = true
@@ -147,15 +161,25 @@ class InformationCell: UITableViewCell {
     }
   }
   
-  func convertCurrency() {
+  func convertCurrency() throws {
     // use inputtext for conversion
     // assign result to convertedInputText
-    let doubleRate = Double(rateTextField.text!)
-    let gCredits = Double(inputText!)
-    let conversion = doubleRate! * gCredits!
     
-    convertedInputText = String(conversion)
-    
+    if let rate = rateTextField.text, let credits = inputText {
+      guard let numberRate = Double(rate) else {
+        print("Not a number")
+        return
+      }
+      guard let numberCredits = Double(credits) else {
+        return
+      }
+
+      let conversion = numberRate * numberCredits
+        
+      convertedInputText = String(conversion)
+    } else {
+      return // nothing happens
+    }
   }
 
 }
