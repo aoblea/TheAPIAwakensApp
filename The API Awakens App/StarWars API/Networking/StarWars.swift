@@ -31,3 +31,4 @@ extension StarWars: Endpoint {
     return []
   }
 }
+

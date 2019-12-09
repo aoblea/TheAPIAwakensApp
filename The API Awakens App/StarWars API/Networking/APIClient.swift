@@ -101,7 +101,7 @@ extension APIClient {
     }
     
     // fetch data
-    func fetch(with request: URLRequest, completion: @escaping (Result<Data, APIError>) -> Void) {
+    private func fetch(with request: URLRequest, completion: @escaping (Result<Data, APIError>) -> Void) {
       let task = dataTask(with: request) { (result) in
         
         DispatchQueue.main.async {

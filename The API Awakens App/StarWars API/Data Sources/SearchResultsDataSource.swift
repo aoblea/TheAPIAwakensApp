@@ -23,7 +23,7 @@ class SearchResultsDataSource: NSObject, UITableViewDataSource {
   
   func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
     let cell = tableView.dequeueReusableCell(withIdentifier: "ResultCell", for: indexPath)
-    cell.textLabel?.text = data[indexPath.row].name
+    cell.textLabel?.text = object(with: indexPath)?.name
     
     return cell
   }
@@ -31,5 +31,9 @@ class SearchResultsDataSource: NSObject, UITableViewDataSource {
   // MARK: - Helper Methods
   func update(with results: [Type]) {
     self.data = results
+  }
+  
+  func object(with indexPath: IndexPath) -> Type? {
+    return data[indexPath.row]
   }
 }

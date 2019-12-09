@@ -16,7 +16,6 @@ class MainMenuTableViewController: UITableViewController, Alertable {
     let search = UISearchController(searchResultsController: searchResultsController)
     search.searchBar.searchBarStyle = .minimal
     search.hidesNavigationBarDuringPresentation = true
-//    search.dimsBackgroundDuringPresentation = true
     search.searchBar.placeholder = "Search for characters, etc."
     search.searchResultsUpdater = self
     return search
@@ -60,18 +59,18 @@ class MainMenuTableViewController: UITableViewController, Alertable {
 extension MainMenuTableViewController: UISearchResultsUpdating {
   func updateSearchResults(for searchController: UISearchController) {
     let searchText = searchController.searchBar.text ?? ""
-    
+
     searchResultsController.filteredResults = searchResultsController.searchResults.filter({ (result) -> Bool in
       return result.name.lowercased().contains(searchText.lowercased())
     })
     
     if searchResultsController.filteredResults.isEmpty {
       searchResultsController.datasource.update(with: searchResultsController.searchResults)
+      searchResultsController.tableView.reloadData()
     } else {
       searchResultsController.datasource.update(with: searchResultsController.filteredResults)
+      searchResultsController.tableView.reloadData()
     }
-    
-    searchResultsController.tableView.reloadData()
   }
 }
 

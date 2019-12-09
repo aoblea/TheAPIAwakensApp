@@ -15,14 +15,10 @@ class SearchResultsTableViewController: UITableViewController, Alertable {
   
   let datasource = SearchResultsDataSource()
   
-  var smallestCharacter: Character?
-  var largestCharacter: Character?
-  
-  var smallestStarship: Starship?
-  var largestStarship: Starship?
-  
-  var smallestVehicle: Vehicle?
-  var largestVehicle: Vehicle?
+  // clients
+  lazy var characterClient = StarWarsAPIClient<Character>()
+  lazy var starshipClient = StarWarsAPIClient<Starship>()
+  lazy var vehicleClient = StarWarsAPIClient<Vehicle>()
   
   // MARK: - Viewdidload
   override func viewDidLoad() {
@@ -31,7 +27,7 @@ class SearchResultsTableViewController: UITableViewController, Alertable {
     navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .cancel, target: self, action: #selector(SearchResultsTableViewController.dismissSearchResultsController))
     
     setupTableView()
-    fetchAllData()
+    fetchAllData() // populate search results
   }
   
   func setupTableView() {
@@ -39,88 +35,74 @@ class SearchResultsTableViewController: UITableViewController, Alertable {
     tableView.dataSource = datasource
     tableView.register(UITableViewCell.self, forCellReuseIdentifier: "ResultCell")
   }
-
+  
   func fetchAllData() {
-    let characterClient = StarWarsAPIClient<Character>()
-    characterClient.fetchAll(with: .people) { [weak self] (result) in
-      guard let searchResultVC = self else { return }
+    characterClient.fetchAll(with: .people) { (result) in
       switch result {
       case .success(let characters):
         characters.forEach { (character) in
-          // fetch planet
-          characterClient.fetchPlanet(with: character.homeWorld) { (result) in
+          self.characterClient.fetchPlanet(with: character.homeWorld) { (result) in
             switch result {
             case .success(let planet):
-              print(planet)
+              character.homeWorldString = planet.name
             case .failure(let error):
               print(error)
-              searchResultVC.showAlert(title: "JSON error has occurred.", message: "Error: \(error)", viewController: searchResultVC)
+              self.showAlert(title: "JSON error has occurred.", message: "Error: \(error)", viewController: self)
             }
           }
+          
           // fetch piloted starships
-          characterClient.fetchStarships(with: character.starships) { (result) in
+          self.characterClient.fetchStarships(with: character.starships) { (result) in
             switch result {
             case .success(let starship):
-              print(starship)
+              character.starshipsStrings.insert(starship.name)
             case .failure(let error):
               print(error)
-              searchResultVC.showAlert(title: "JSON error has occurred.", message: "Error: \(error)", viewController: searchResultVC)
+              self.showAlert(title: "JSON error has occurred.", message: "Error: \(error)", viewController: self)
             }
           }
+          
           // fetch piloted vehicles
-          characterClient.fetchVehicles(with: character.vehicles) { (result) in
+          self.characterClient.fetchVehicles(with: character.vehicles) { (result) in
             switch result {
             case .success(let vehicle):
-              print(vehicle)
+              character.vehiclesStrings.insert(vehicle.name)
             case .failure(let error):
               print(error)
-              searchResultVC.showAlert(title: "JSON error has occurred.", message: "Error: \(error)", viewController: searchResultVC)
+              self.showAlert(title: "JSON error has occurred.", message: "Error: \(error)", viewController: self)
             }
           }
         }
-
-        searchResultVC.searchResults.append(contentsOf: characters)
-        searchResultVC.tableView.reloadData()
-        
-        searchResultVC.smallestCharacter = searchResultVC.findShortestAndTallestCharacter(characters).0
-        searchResultVC.largestCharacter = searchResultVC.findShortestAndTallestCharacter(characters).1
+        self.searchResults.append(contentsOf: characters)
+        self.tableView.reloadData()
       case .failure(let error):
         print(error)
-        searchResultVC.showAlert(title: "JSON error has occurred.", message: "Error: \(error)", viewController: searchResultVC)
+        self.showAlert(title: "JSON error has occurred.", message: "Error: \(error)", viewController: self)
       }
     }
     
-    let starshipClient = StarWarsAPIClient<Starship>()
-    starshipClient.fetchAll(with: .starships) { [weak self] (result) in
-      guard let searchResultVC = self else { return }
+    starshipClient.fetchAll(with: .starships) { (result) in
       switch result {
       case .success(let starships):
-        searchResultVC.searchResults.append(contentsOf: starships)
-        searchResultVC.tableView.reloadData()
-        
-        searchResultVC.smallestStarship = searchResultVC.findSmallestAndLargestStarship(starships).0
-        searchResultVC.largestStarship = searchResultVC.findSmallestAndLargestStarship(starships).1
+        self.searchResults.append(contentsOf: starships)
+        self.tableView.reloadData()
       case .failure(let error):
         print(error)
-        searchResultVC.showAlert(title: "JSON error has occurred.", message: "Error: \(error)", viewController: searchResultVC)
+        self.showAlert(title: "JSON error has occurred.", message: "Error: \(error)", viewController: self)
       }
     }
-
-    let vehicleClient = StarWarsAPIClient<Vehicle>()
-    vehicleClient.fetchAll(with: .vehicles) { [weak self] (result) in
-      guard let searchResultVC = self else { return }
+    
+    vehicleClient.fetchAll(with: .vehicles) { (result) in
       switch result {
       case .success(let vehicles):
-        searchResultVC.searchResults.append(contentsOf: vehicles)
-        searchResultVC.tableView.reloadData()
-        
-        searchResultVC.smallestVehicle = searchResultVC.findSmallestAndLargestVehicle(vehicles).0
-        searchResultVC.largestVehicle = searchResultVC.findSmallestAndLargestVehicle(vehicles).1
+        self.searchResults.append(contentsOf: vehicles)
+        self.tableView.reloadData()
       case .failure(let error):
         print(error)
-        searchResultVC.showAlert(title: "JSON error has occurred.", message: "Error: \(error)", viewController: searchResultVC)
+        self.showAlert(title: "JSON error has occurred.", message: "Error: \(error)", viewController: self)
       }
     }
+    
   }
   
   @objc func dismissSearchResultsController() {
@@ -128,35 +110,78 @@ class SearchResultsTableViewController: UITableViewController, Alertable {
   }
   
   override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-    let detailController = DetailsViewController()
+    let detailVC = DetailsViewController()
+    let selection = self.datasource.object(with: indexPath)
     
-    if filteredResults.isEmpty {
-      print("\(searchResults[indexPath.row].name)")
-      present(detailController, with: searchResults[indexPath.row])
-    } else {
-      print("\(filteredResults[indexPath.row].name)")
-      present(detailController, with: filteredResults[indexPath.row])
-    }
-  }
-  
-  func present(_ detailController: DetailsViewController, with selection: Type) {
-    detailController.selection = selection
-    
-    switch selection.type {
+    switch selection!.type {
     case .character:
-      detailController.smallest = smallestCharacter
-      detailController.largest = largestCharacter
-    case .starship:
-      detailController.smallest = smallestStarship
-      detailController.largest = largestStarship
-    case .vehicle:
-      detailController.smallest = smallestVehicle
-      detailController.largest = largestVehicle
-    }
-    
-    present(detailController, animated: true, completion: nil)
-  }
+      DispatchQueue.main.async {
+        self.characterClient.fetchAll(with: .people) { (result) in
+          switch result {
+          case .success(let characters):
+            detailVC.selection = selection
+            
+            detailVC.smallestTitleLabel.text = "Shortest:"
+            detailVC.smallestDescriptionLabel.text = self.findShortestAndTallestCharacter(characters).0?.name
+            detailVC.largestTitleLabel.text = "Tallest:"
+            detailVC.largestDescriptionLabel.text = self.findShortestAndTallestCharacter(characters).1?.name
 
+            detailVC.detailsTableView.reloadData()
+
+            detailVC.updatePickerData(with: characters)
+            detailVC.pickerView.reloadAllComponents()
+          case .failure(let error):
+            print(error)
+          }
+        }
+      }
+    case .starship:
+      DispatchQueue.main.async {
+        self.starshipClient.fetchAll(with: .starships) { (result) in
+          switch result {
+          case .success(let starships):
+            detailVC.selection = selection
+            
+            detailVC.smallestTitleLabel.text = "Smallest:"
+            detailVC.smallestDescriptionLabel.text = self.findSmallestAndLargestStarship(starships).0?.name
+            detailVC.largestTitleLabel.text = "Largest:"
+            detailVC.largestDescriptionLabel.text = self.findSmallestAndLargestStarship(starships).1?.name
+
+            detailVC.detailsTableView.reloadData()
+
+            detailVC.updatePickerData(with: starships)
+            detailVC.pickerView.reloadAllComponents()
+          case .failure(let error):
+            print(error)
+          }
+        }
+      }
+    case.vehicle:
+      DispatchQueue.main.async {
+        self.vehicleClient.fetchAll(with: .vehicles) { (result) in
+          switch result {
+          case .success(let vehicles):
+            detailVC.selection = selection
+
+            detailVC.smallestTitleLabel.text = "Smallest:"
+            detailVC.smallestDescriptionLabel.text = self.findSmallestAndLargestVehicle(vehicles).0?.name
+            detailVC.largestTitleLabel.text = "Largest:"
+            detailVC.largestDescriptionLabel.text = self.findSmallestAndLargestVehicle(vehicles).1?.name
+
+            detailVC.detailsTableView.reloadData()
+
+            detailVC.updatePickerData(with: vehicles)
+            detailVC.pickerView.reloadAllComponents()
+          case .failure(let error):
+            print(error)
+          }
+        }
+      }
+    }
+
+    self.navigationController?.pushViewController(detailVC, animated: true)
+  }  
+  
 }
 
 extension SearchResultsTableViewController {
