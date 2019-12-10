@@ -61,8 +61,8 @@ class DetailCell: UITableViewCell, Alertable {
       // convert price
       // TODO: Make a throwing error to send out alert message to user.
       if let rate = inputTextField.text, let credits = value {
-        if rate == "0" {
-          self.showAlert(title: "Unable to convert with 0", message: "Please enter a number over 0", viewController: self.delegate!)
+        if rate == "0" || rate.contains("-") {
+          self.showAlert(title: "Unable to convert with 0 or a negative number", message: "Please enter a number over 0", viewController: self.delegate!)
         } else {
           guard let rateInt = Int(rate) else { return self.showAlert(title: "Not a number", message: "Please enter a number over 0", viewController: self.delegate!) }
           guard let creditsInt = Int(credits) else { return }
