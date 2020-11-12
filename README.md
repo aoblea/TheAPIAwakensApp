@@ -1,7 +1,7 @@
 # The API Awakens App
 ## Treehouse iOS Project 6
 
-The API Awakens App is an app that uses the Star Wars API(SWAPI) [https://swapi.co](https://swapi.co) to fetch information about three types of Star Wars entities: people, vehicles, and starships.
+The API Awakens App is an app that uses the Star Wars API(SWAPI) [https://swapi.dev/](https://swapi.co) to fetch information about three types of Star Wars entities: people, vehicles, and starships.
 Regardless of which view a user is on, there is a bar across the bottom showing the largest and smallest member of the group. In addition, becase all measurements are given in metric units (meters), there is a feature that can convert the metric units to British units (inches), at a tap of a button. 
 For starships and vehicles, users can convert "Galactic Credits" to US Dollars, based on an exchange rate provided by the the user in a text field.
 
